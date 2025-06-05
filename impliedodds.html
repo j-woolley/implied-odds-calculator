@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Odds & Implied Probability Converter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background: #f5f5f5;
+    }
+
+    .wrapper {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .box {
+      background: white;
+      padding: 30px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      box-sizing: border-box;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    .result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    @media (min-width: 800px) {
+      .box {
+        width: 45%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wrapper">
+    <!-- Left Box: Implied Probability → Odds -->
+    <div class="box">
+      <h2>Implied Probability → Odds</h2>
+      <label for="probability">Enter Implied Probability (%):</label>
+      <input type="number" id="probability" placeholder="e.g. 50">
+      <button onclick="calculateOdds()">Calculate Odds</button>
+      <div class="result" id="oddsOutput"></div>
+    </div>
+
+    <!-- Right Box: Odds → Implied Probability -->
+    <div class="box">
+      <h2>Odds → Implied Probability</h2>
+      <label for="oddsInput">Enter Odds (e.g. 2.0 or +150 / -200):</label>
+      <input type="text" id="oddsInput" placeholder="e.g. 2.0 or +150">
+      <button onclick="calculateImpliedProbability()">Calculate Probability</button>
+      <div class="result" id="probOutput"></div>
+    </div>
+  </div>
+
+  <script>
+    function calculateOdds() {
+      const input = document.getElementById("probability").value;
+      const probPercent = parseFloat(input);
+
+      if (isNaN(probPercent) || probPercent <= 0 || probPercent >= 100) {
+        document.getElementById("oddsOutput").innerText = "Please enter a valid percentage between 0 and 100.";
+        return;
+      }
+
+      const impliedProb = probPercent / 100;
+      const decimalOdds = 1 / impliedProb;
+      let americanOdds = "";
+
+      if (decimalOdds >= 2.0) {
+        americanOdds = "+" + ((decimalOdds - 1) * 100).toFixed(0);
+      } else {
+        americanOdds = (-100 / (decimalOdds - 1)).toFixed(0);
+      }
+
+      document.getElementById("oddsOutput").innerHTML =
+        `Decimal Odds: <strong>${decimalOdds.toFixed(2)}</strong><br>` +
+        `American Odds: <strong>${americanOdds}</strong>`;
+    }
+
+    function calculateImpliedProbability() {
+      const input = document.getElementById("oddsInput").value.trim();
+      if (!input) {
+        document.getElementById("probOutput").innerText = "Please enter odds.";
+        return;
+      }
+
+      let impliedProb;
+
+      if (input.startsWith('+') || input.startsWith('-')) {
+        // American odds
+        const american = parseFloat(input);
+        if (isNaN(american)) {
+          document.getElementById("probOutput").innerText = "Invalid American odds input.";
+          return;
+        }
+        if (american > 0) {
+          impliedProb = 100 / (american + 100);
+        } else {
+          impliedProb = -american / (-american + 100);
+        }
+      } else {
+        // Decimal odds
+        const decimal = parseFloat(input);
+        if (isNaN(decimal) || decimal <= 1) {
+          document.getElementById("probOutput").innerText = "Decimal odds must be greater than 1.";
+          return;
+        }
+        impliedProb = 1 / decimal;
+      }
+
+      const impliedPercent = (impliedProb * 100).toFixed(2);
+      document.getElementById("probOutput").innerHTML =
+        `Implied Probability: <strong>${impliedPercent}%</strong>`;
+    }
+  </script>
+
+</body>
+</html>
